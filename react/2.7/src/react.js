@@ -1,3 +1,9 @@
+export class Component {
+  constructor(props) {
+    this.props = props;
+  }
+}
+
 export const createDOM = (node) => {
   if (typeof node === "string") {
     return document.createTextNode(node);
@@ -18,16 +24,27 @@ export const render = (vdom, container) => {
   container.appendChild(createDOM(vdom));
 };
 
+const makeProps = (props, children) => {
+  return {
+    ...props,
+    children: children.length === 1 ? children[0] : children,
+  };
+};
+
 export const createElement = (tag, props, ...children) => {
   props = props ?? {};
 
   if (typeof tag === "function") {
-    if (children.length > 0) {
-      return tag({
-        ...props,
-        children: children.length === 1 ? children[0] : children,
-      });
-    } else return tag(props);
+    if (tag.prototype instanceof Component) {
+      const instance = new tag(makeProps(props, children));
+      return instance.render();
+    } else {
+      if (children.length > 0) {
+        return tag(makeProps(props, children));
+      } else {
+        return tag(props);
+      }
+    }
   } else {
     return { tag, props, children };
   }
